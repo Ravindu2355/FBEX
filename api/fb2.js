@@ -1,12 +1,17 @@
 export default async function handler(req, res) {
-  const targetUrl = req.query.url;
+  const fbUrl = req.query.url;
 
-  if (!targetUrl) {
+  if (!fbUrl) {
     return res.status(400).json({ error: "Missing url parameter" });
   }
 
+  // Encode FB URL
+  const apiUrl =
+    "https://serverless-tooly-gateway-6n4h522y.ue.gateway.dev/facebook/video?url=" +
+    encodeURIComponent(fbUrl);
+
   try {
-    const response = await fetch(targetUrl, {
+    const response = await fetch(apiUrl, {
       method: "GET",
       headers: {
         "accept": "*/*",
@@ -24,22 +29,14 @@ export default async function handler(req, res) {
       },
     });
 
-    const contentType = response.headers.get("content-type");
+    const data = await response.json();
 
-    // If JSON
-    if (contentType?.includes("application/json")) {
-      const json = await response.json();
-      return res.status(200).json(json);
-    }
-
-    // Else return text/html
-    const text = await response.text();
-    return res.status(200).send(text);
+    return res.status(200).json(data);
 
   } catch (err) {
     return res.status(500).json({
-      error: "Fetch failed",
+      error: "FB proxy fetch failed",
       message: err.message,
     });
   }
-  }
+      }
